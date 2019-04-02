@@ -50,9 +50,10 @@ public class RequestHandler extends Thread{
                 param = HttpRequestUtils.getParseValues(bodyInRequest);
             }
             DataOutputStream dos = new DataOutputStream(out);
-            RequestUriHandler requestUriHandler = new RequestUriHandler(dos);
+            RequestUriHandler requestUriHandler = new RequestUriHandler();
+            Response response = requestUriHandler.requestHandle(uri, param);
+            send(dos, response);
 
-            requestUriHandler.executeRequest(uri, param);
         } catch (IOException e) {
             log.error(e.getMessage());
         }
@@ -74,5 +75,11 @@ public class RequestHandler extends Thread{
         char[] body = new char[bodyLength];
         br.read(body, 0, bodyLength);
         return String.valueOf(body);
+    }
+
+    private void send(DataOutputStream dos, Response response) throws IOException {
+        dos.write(response.getHead());
+        if(response.getbody() != null) dos.write(response.getbody());
+        dos.flush();
     }
 }

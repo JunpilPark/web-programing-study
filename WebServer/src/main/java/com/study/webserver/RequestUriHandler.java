@@ -16,39 +16,31 @@ import java.util.regex.Pattern;
 public class RequestUriHandler {
     private static final Logger log = LoggerFactory.getLogger(RequestUriHandler.class);
 
-    private DataOutputStream dos;
-
-    public RequestUriHandler(DataOutputStream dos) {
-        this.dos = dos;
-    }
-
-    public String action(String action, Map<String, String> param ) {
-        String returnValue = "202";
-        if(action.equals("/user/create")) {
-            User user = new User(param.get("userId"),param.get("password"), param.get("name"), param.get("email"));
-            JoinService joinService = new JoinService();
-            if(joinService.join(user) == 0)
-            {
-                returnValue = "202";
-            }
+    private Response joinUser(Map<String, String> param ) throws IOException {
+        Response rediect = null;
+        User user = new User(param.get("userId"), param.get("password"), param.get("name"), param.get("email"));
+        JoinService joinService = new JoinService();
+        if(joinService.join(user) == 0)
+        {
+            rediect = Response.createRedirectionResponse("/index.html");
         }
-        return returnValue;
+        return rediect;
     }
 
-    public void executeRequest(String uri, Map<String, String> param) throws IOException {
+    public Response requestHandle(String uri, Map<String, String> param) throws IOException {
         String actionOrUrl = HttpRequestUtils.getRequestPath(uri);
         String body = "";
-
+        Response response = null;
         if(HttpRequestUtils.isFileType(actionOrUrl)) {
             body = getFileFromUri(actionOrUrl);
-            Response response = Response.createResponse("202", null, body);
-            send(response);
+            response = Response.createResponse("202", null, body);
         }
         else {
-            action(uri, param);
-            Response rediect = Response.createResponse("302", "/index.html", null);
-            send(rediect);
+            if(uri.equals("/user/create")) {
+                response = joinUser(param);
+            }
         }
+        return response;
     }
 
     private String getFileFromUri(String uri) throws IOException {
@@ -67,9 +59,4 @@ public class RequestUriHandler {
         }
     }
 
-    private void send(Response response) throws IOException {
-        dos.write(response.getHead());
-        if(response.getbody() != null) dos.write(response.getbody());
-        dos.flush();
-    }
 }

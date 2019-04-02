@@ -55,4 +55,10 @@ public class Response {
         log.debug("body : {}", body );
         return  new Response(headCreated, body);
     }
+
+    public static Response createRedirectionResponse(String location) throws IOException {
+        String headCreated = createHead("302", location, 0);
+        log.debug("head : {}", headCreated );
+        return  new Response(headCreated, null);
+    }
 }
