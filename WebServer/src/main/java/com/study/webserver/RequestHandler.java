@@ -1,13 +1,18 @@
 package com.study.webserver;
 
 
-import com.study.webserver.util.CustomUtil;
+import com.study.webserver.model.User;
+import com.study.webserver.util.HttpRequestUtils;
+import javafx.css.Match;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class RequestHandler extends Thread{
     private static final Logger log = LoggerFactory.getLogger(RequestHandler.class);
@@ -27,27 +32,12 @@ public class RequestHandler extends Thread{
             OutputStream out = connection.getOutputStream()) {
             ArrayList<String> request = readRequest(in);
             DataOutputStream dos = new DataOutputStream(out);
-            String body = getFileFromUri(CustomUtil.getUri(request.get(0)));
+            RequestUriHandler requestUriHandler = new RequestUriHandler();
+            String body = requestUriHandler.createBody(HttpRequestUtils.getUri(request.get(0)));
             resoponse200Header(dos, body.getBytes().length);
             responseBody(dos, body.getBytes("utf-8"));
         } catch (IOException e) {
             log.error(e.getMessage());
-        }
-    }
-
-    private String getFileFromUri(String uri) throws IOException {
-        try (FileReader fileReader = new FileReader("./webapp" + uri);
-             BufferedReader bufReader = new BufferedReader(fileReader)){
-            StringBuffer stringBuffer = new StringBuffer();
-            String line;
-            while ( (line = bufReader.readLine()) != null ) {
-                stringBuffer.append(line);
-            }
-            log.debug("getFileFromUri() return : " + stringBuffer.toString());
-            return  stringBuffer.toString();
-        } catch (IOException e) {
-            log.error(e.getMessage());
-            throw e;
         }
     }
 
