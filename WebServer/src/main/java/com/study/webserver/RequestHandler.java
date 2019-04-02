@@ -1,6 +1,7 @@
 package com.study.webserver;
 
 
+import com.oracle.tools.packager.IOUtils;
 import com.study.webserver.model.User;
 import com.study.webserver.util.HttpRequestUtils;
 import javafx.css.Match;
@@ -16,6 +17,8 @@ import java.util.regex.Pattern;
 
 public class RequestHandler extends Thread{
     private static final Logger log = LoggerFactory.getLogger(RequestHandler.class);
+    public static final String GET = "GET";
+    public static final String POSET = "POST";
 
     private Socket connection;
 
@@ -30,10 +33,28 @@ public class RequestHandler extends Thread{
 
         try(InputStream in = connection.getInputStream();
             OutputStream out = connection.getOutputStream()) {
-            ArrayList<String> request = readRequest(in);
-            DataOutputStream dos = new DataOutputStream(out);
+
+            InputStreamReader inputStreamReader = new InputStreamReader(in, "UTF-8");
+            BufferedReader bufferedReaded = new BufferedReader(inputStreamReader);
+
+            ArrayList<String> head = readHead(bufferedReaded);
+            String type = HttpRequestUtils.getRequestType(head.get(0));
+            String uri =  HttpRequestUtils.getUri(head.get(0));
+            Map<String, String> param;
+
+            if(type.equals(GET)) {
+                param = HttpRequestUtils.getParseValues(HttpRequestUtils.getParameterLine(uri));
+            }
+            else {
+                String bodyInRequest = readBody(bufferedReaded, HttpRequestUtils.getContentsLength(head));
+                param = HttpRequestUtils.getParseValues(bodyInRequest);
+            }
+
             RequestUriHandler requestUriHandler = new RequestUriHandler();
-            String body = requestUriHandler.createBody(HttpRequestUtils.getUri(request.get(0)));
+            DataOutputStream dos = new DataOutputStream(out);
+
+
+            String body = requestUriHandler.createBody(uri, param);
             resoponse200Header(dos, body.getBytes().length);
             responseBody(dos, body.getBytes("utf-8"));
         } catch (IOException e) {
@@ -41,16 +62,22 @@ public class RequestHandler extends Thread{
         }
     }
 
-    private ArrayList<String> readRequest(InputStream in) throws IOException {
-        InputStreamReader inputStreamReader = new InputStreamReader(in, "UTF-8");
-        BufferedReader bufferedReaded = new BufferedReader(inputStreamReader);
+    private ArrayList<String> readHead(BufferedReader br) throws IOException {
+
         ArrayList<String> request = new ArrayList<>();
         String lineReading;
-        while ( ((lineReading = bufferedReaded.readLine()) != null) && !("".equals(lineReading)) ) {
+        while ( ((lineReading = br.readLine()) != null) && !("".equals(lineReading)) ) {
             log.debug(lineReading);
             request.add(lineReading);
         }
         return request;
+    }
+
+    private String readBody(BufferedReader br, int bodyLength) throws IOException {
+        if(bodyLength <= 0) return null;
+        char[] body = new char[bodyLength];
+        br.read(body, 0, bodyLength);
+        return String.valueOf(body);
     }
 
     private void resoponse200Header(DataOutputStream dos, int lengthOfBodyContent) {

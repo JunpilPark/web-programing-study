@@ -14,23 +14,27 @@ import java.util.regex.Pattern;
 public class RequestUriHandler {
     private static final Logger log = LoggerFactory.getLogger(RequestUriHandler.class);
 
+    public String action(String action, Map<String, String> param ) {
+        String returnValue = "";
+        if(action.equals("/user/create")) {
+            User user = new User(param.get("userId"),param.get("password"), param.get("name"), param.get("email"));
+            returnValue = "회원가입 되었습니다.\r\n" +
+                    "ID : " + user.getId() + "\r\n" +
+                    "PASSWORD : " + user.getPassword() + "\n\n" +
+                    "NAME : " + user.getName() + "\n\n" +
+                    "E-Mail : " + user.getEmail();
+        }
+        return returnValue;
+    }
 
-    public String createBody(String uri) throws IOException {
-        String path = HttpRequestUtils.getRequestPath(uri);
+    public String createBody(String uri, Map<String, String> param) throws IOException {
+        String actionOrUrl = HttpRequestUtils.getRequestPath(uri);
         String body = "";
-        if(isFileType(path)) {
-            body = getFileFromUri(path);
+        if(isFileType(actionOrUrl)) {
+            body = getFileFromUri(actionOrUrl);
         }
         else {
-            if(path.equals("/user/create")) {
-                Map<String, String> queryString = HttpRequestUtils.getQueryString(uri);
-                User user = new User(queryString.get("userId"),queryString.get("password"), queryString.get("name"), queryString.get("email"));
-                body = "회원가입 되었습니다.\r\n" +
-                        "ID : " + user.getId() + "\r\n" +
-                        "PASSWORD : " + user.getPassword() + "\n\n" +
-                        "NAME : " + user.getName() + "\n\n" +
-                        "E-Mail : " + user.getEmail();
-            }
+           body = action(actionOrUrl, param);
         }
         return body;
     }
