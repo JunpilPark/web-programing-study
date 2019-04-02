@@ -5,6 +5,7 @@ import com.google.common.base.Strings;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class HttpRequestUtils {
 
@@ -80,4 +81,11 @@ public class HttpRequestUtils {
         return keysMap;
     }
 
+
+    public static boolean isFileType(String path) {
+        if(Pattern.matches("\\S*\\.\\S*", path)) {
+            return true;
+        }
+        return false;
+    }
 }

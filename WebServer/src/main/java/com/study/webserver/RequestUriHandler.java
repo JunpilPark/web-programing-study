@@ -1,11 +1,13 @@
 package com.study.webserver;
 
+import com.google.common.base.Strings;
 import com.study.webserver.model.User;
 import com.study.webserver.util.HttpRequestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Map;
@@ -14,36 +16,39 @@ import java.util.regex.Pattern;
 public class RequestUriHandler {
     private static final Logger log = LoggerFactory.getLogger(RequestUriHandler.class);
 
+    private DataOutputStream dos;
+
+    public RequestUriHandler(DataOutputStream dos) {
+        this.dos = dos;
+    }
+
     public String action(String action, Map<String, String> param ) {
-        String returnValue = "";
+        String returnValue = "202";
         if(action.equals("/user/create")) {
             User user = new User(param.get("userId"),param.get("password"), param.get("name"), param.get("email"));
-            returnValue = "회원가입 되었습니다.\r\n" +
-                    "ID : " + user.getId() + "\r\n" +
-                    "PASSWORD : " + user.getPassword() + "\n\n" +
-                    "NAME : " + user.getName() + "\n\n" +
-                    "E-Mail : " + user.getEmail();
+            JoinService joinService = new JoinService();
+            if(joinService.join(user) == 0)
+            {
+                returnValue = "202";
+            }
         }
         return returnValue;
     }
 
-    public String createBody(String uri, Map<String, String> param) throws IOException {
+    public void executeRequest(String uri, Map<String, String> param) throws IOException {
         String actionOrUrl = HttpRequestUtils.getRequestPath(uri);
         String body = "";
-        if(isFileType(actionOrUrl)) {
+
+        if(HttpRequestUtils.isFileType(actionOrUrl)) {
             body = getFileFromUri(actionOrUrl);
+            Response response = Response.createResponse("202", null, body);
+            send(response);
         }
         else {
-           body = action(actionOrUrl, param);
+            action(uri, param);
+            Response rediect = Response.createResponse("302", "/index.html", null);
+            send(rediect);
         }
-        return body;
-    }
-
-    private boolean isFileType(String path) {
-        if(Pattern.matches("\\S*\\.\\S*", path)) {
-            return true;
-        }
-        return false;
     }
 
     private String getFileFromUri(String uri) throws IOException {
@@ -60,5 +65,11 @@ public class RequestUriHandler {
             log.error(e.getMessage());
             throw e;
         }
+    }
+
+    private void send(Response response) throws IOException {
+        dos.write(response.getHead());
+        if(response.getbody() != null) dos.write(response.getbody());
+        dos.flush();
     }
 }

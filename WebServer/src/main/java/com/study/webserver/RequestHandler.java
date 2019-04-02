@@ -49,14 +49,10 @@ public class RequestHandler extends Thread{
                 String bodyInRequest = readBody(bufferedReaded, HttpRequestUtils.getContentsLength(head));
                 param = HttpRequestUtils.getParseValues(bodyInRequest);
             }
-
-            RequestUriHandler requestUriHandler = new RequestUriHandler();
             DataOutputStream dos = new DataOutputStream(out);
+            RequestUriHandler requestUriHandler = new RequestUriHandler(dos);
 
-
-            String body = requestUriHandler.createBody(uri, param);
-            resoponse200Header(dos, body.getBytes().length);
-            responseBody(dos, body.getBytes("utf-8"));
+            requestUriHandler.executeRequest(uri, param);
         } catch (IOException e) {
             log.error(e.getMessage());
         }
@@ -78,26 +74,5 @@ public class RequestHandler extends Thread{
         char[] body = new char[bodyLength];
         br.read(body, 0, bodyLength);
         return String.valueOf(body);
-    }
-
-    private void resoponse200Header(DataOutputStream dos, int lengthOfBodyContent) {
-        try {
-            dos.writeBytes("HTTP/1.1 200 OK \r\n");
-            dos.writeBytes("Content-Type: text/html;charset=utf\r\n");
-            dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
-            dos.writeBytes("\r\n");
-        } catch (IOException e) {
-            log.error(e.getMessage());
-        }
-    }
-
-    private void responseBody(DataOutputStream dos, byte[] body) {
-        try {
-            dos.write(body);
-            dos.writeBytes("\r\n");
-            dos.flush();
-        } catch (IOException e) {
-            log.error(e.getMessage());
-        }
     }
 }
