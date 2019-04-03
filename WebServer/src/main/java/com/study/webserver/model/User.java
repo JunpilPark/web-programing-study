@@ -44,4 +44,9 @@ public class User {
     public void setEmail(String email) {
         this.email = email;
     }
+
+    @Override
+    public String toString() {
+        return "ID : " + this.getId() + ", PASS : " + this.getPassword() + ", NAME : " + this.name + ", E-Mail : " + this.email;
+    }
 }

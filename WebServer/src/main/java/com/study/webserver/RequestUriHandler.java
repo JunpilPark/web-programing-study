@@ -1,6 +1,7 @@
 package com.study.webserver;
 
 import com.google.common.base.Strings;
+import com.study.webserver.db.DataBase;
 import com.study.webserver.model.User;
 import com.study.webserver.util.HttpRequestUtils;
 import org.slf4j.Logger;
@@ -17,14 +18,30 @@ public class RequestUriHandler {
     private static final Logger log = LoggerFactory.getLogger(RequestUriHandler.class);
 
     private Response joinUser(Map<String, String> param ) throws IOException {
-        Response rediect = null;
         User user = new User(param.get("userId"), param.get("password"), param.get("name"), param.get("email"));
+        Response responseJoin = new Response();
         JoinService joinService = new JoinService();
         if(joinService.join(user) == 0)
         {
-            rediect = Response.createRedirectionResponse("/index.html");
+            responseJoin.createRedirection("/index.html");
         }
-        return rediect;
+        return responseJoin;
+    }
+
+    private Response login(Map<String, String> param) throws IOException {
+        User userLoined = DataBase.findUserById(param.get("userId"));
+        Response response = new Response();
+        if ( userLoined != null && userLoined.getPassword().equals(param.get("password")) )  { //성공
+            response.setCookies("logined=true");
+            response.createRedirection("/index.html");
+            log.debug("login 성공");
+        }
+        else  {
+            response.setCookies("logined=false");
+            response.createRedirection("/user/login_failed.html");
+            log.debug("login 실패");
+        }
+        return response;
     }
 
     public Response requestHandle(String uri, Map<String, String> param) throws IOException {
@@ -33,11 +50,15 @@ public class RequestUriHandler {
         Response response = null;
         if(HttpRequestUtils.isFileType(actionOrUrl)) {
             body = getFileFromUri(actionOrUrl);
-            response = Response.createResponse("202", null, body);
+            response = new Response();
+            response.createResponse(body, "text/html", "utf-8");
         }
         else {
             if(uri.equals("/user/create")) {
                 response = joinUser(param);
+            }
+            if(uri.equals("/user/login")) {
+                response = login(param);
             }
         }
         return response;

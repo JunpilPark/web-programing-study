@@ -78,8 +78,8 @@ public class RequestHandler extends Thread{
     }
 
     private void send(DataOutputStream dos, Response response) throws IOException {
-        dos.write(response.getHead());
-        if(response.getbody() != null) dos.write(response.getbody());
+        dos.write(response.getHead().getBytes());
+        if(response.getBody() != null) dos.write(response.getBody().getBytes("utf-8"));
         dos.flush();
     }
 }

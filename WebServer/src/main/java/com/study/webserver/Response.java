@@ -10,55 +10,92 @@ import java.io.*;
 public class Response {
     private static final Logger log = LoggerFactory.getLogger(Response.class);
 
-    private byte[] head;
-    private byte[] body;
+    private String code;
+    private String codeName;
+    private String location;
+    private String contentsType;
+    private String charset;
+    private String cookie;
 
-    private Response(byte[] head, byte[] body) {
-        this.head = head;
-        this.body = body;
+    private String body;
+    private String head;
+
+
+    Response() {
+        this.code = "202";
+        this.codeName = "OK";
     }
-    private Response(String head, String body) throws UnsupportedEncodingException {
-        this.head = head.getBytes();
-        if(Strings.isNullOrEmpty(body) == false) {
-            this.body = body.getBytes("utf-8");
-        }
-    }
-    private static String createHead(String code, String location, int bodyLength) {
+
+    private String createHead(int bodyLength) {
         StringBuilder head = new StringBuilder();
 
-        if(code.equals("302")) {
-            head.append("HTTP/1.1 302 Found \r\n");
-            head.append("Location: " + location + "\r\n");
-        }
-        else {
-            head.append("HTTP/1.1 202 OK \r\n");
-            head.append("Content-Type: text/html;charset=utf\r\n");
-            head.append("Content-Length: " + bodyLength + "\r\n");
-        }
+        head.append("HTTP/1.1 " + code + " " + codeName);
+        if( !Strings.isNullOrEmpty(contentsType) ) head.append("\r\n" + "Content-Type: " + contentsType);
+        if( !Strings.isNullOrEmpty(charset) ) head.append(";charset=" + charset + "\r\n");
+        else head.append("\r\n");
+        if(bodyLength > 0) head.append("Content-Length: " + bodyLength + "\r\n");
+        if( !Strings.isNullOrEmpty(location) ) head.append("Location: " + location + "\r\n");
+        if( !Strings.isNullOrEmpty(cookie) ) head.append("Set-Cookie: " + cookie + "\r\n");
         head.append("\r\n");
         return  head.toString();
     }
 
-    public byte[] getHead()  {
-        return head;
+    public void setContentsType(String contentsType) {
+        this.contentsType = contentsType;
     }
 
-    public byte[] getbody()  {
-        return body;
+    public void setCharset(String charset) {
+        this.charset = charset;
     }
 
-    public static Response createResponse(String code, String location, String body) throws IOException {
+    public void createResponse(String body) throws IOException {
+        createResponse(body, null, null);
+    }
+
+    public String getBody() {
+        log.debug(this.body);
+        return this.body;
+    }
+
+    public String getHead() {
+        log.debug(this.head);
+        return this.head;
+    }
+
+    public void setCookies(String cookie) {
+        this.cookie = cookie;
+    }
+
+    public void createResponse(String body, String contentsType, String charset) throws IOException {
+        this.code ="202";
+        this.codeName = "OK";
+        this.contentsType = contentsType;
+        this.charset = charset;
+
         int bodyLength = 0;
         if( Strings.isNullOrEmpty(body) == false ) bodyLength = body.length();
-        String headCreated = createHead(code, location, bodyLength);
-        log.debug("head : {}", headCreated );
-        log.debug("body : {}", body );
-        return  new Response(headCreated, body);
+        this.body = body;
+        this.head = createHead(bodyLength);
     }
 
-    public static Response createRedirectionResponse(String location) throws IOException {
-        String headCreated = createHead("302", location, 0);
-        log.debug("head : {}", headCreated );
-        return  new Response(headCreated, null);
+    public  void createRedirection(String location) throws IOException {
+        this.code ="302";
+        this.codeName = "Found";
+        this.contentsType = null;
+        this.charset = null;
+        this.location = location;
+        this.body = null;
+        this.head = createHead(0);
+    }
+
+    public void clean() {
+        this.head = null;
+        this.body = null;
+        this.cookie = null;
+        this.charset = null;
+        this.location = null;
+        this.contentsType = null;
+        this.codeName = null;
+        this.code = null;
     }
 }

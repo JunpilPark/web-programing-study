@@ -47,6 +47,26 @@ public class HttpRequestUtils {
         return contentsLength;
     }
 
+    public static String getCookie(ArrayList<String> head) {
+        int contentsLengthIndex = -1;
+        String cookie = null;
+        try {
+            for (int i = 0; i < head.size(); i++) {
+                if (head.get(i).contains("Cookie")) {
+                    contentsLengthIndex = i;
+                    break;
+                }
+            }
+            if (contentsLengthIndex != -1) {
+                String[] temp = head.get(contentsLengthIndex).split(":");
+                cookie = temp[1].trim();
+            }
+        }catch (Exception e) {
+            cookie = null;
+        }
+        return cookie;
+    }
+
     public static String getParameterLine(String uri) {
         if(Strings.isNullOrEmpty(uri.trim())) {
             throw  new NullPointerException("requestHead is Null or empty");
