@@ -28,43 +28,39 @@ public class HttpRequestUtils {
     }
 
     public static int getContentsLength(ArrayList<String> head) {
-        int contentsLengthIndex = -1;
         int contentsLength = 0;
         try {
-            for (int i = 0; i < head.size(); i++) {
-                if (head.get(i).contains("Content-Length")) {
-                    contentsLengthIndex = i;
-                    break;
-                }
-            }
-            if (contentsLengthIndex != -1) {
-                String[] temp = head.get(contentsLengthIndex).split(":");
-                contentsLength = Integer.parseInt(temp[1].trim());
-            }
-        }catch (Exception e) {
+            contentsLength = Integer.parseInt(getValuesParsingInHead(head, "Content-Length"));
+        }
+        catch (Exception e) {
             contentsLength = 0;
         }
         return contentsLength;
     }
 
-    public static String getCookie(ArrayList<String> head) {
-        int contentsLengthIndex = -1;
-        String cookie = null;
+    private static String getValuesParsingInHead(ArrayList<String> head, String key) {
+        int lineIndexTarget = -1;
+        String values = null;
         try {
             for (int i = 0; i < head.size(); i++) {
-                if (head.get(i).contains("Cookie")) {
-                    contentsLengthIndex = i;
+                if (head.get(i).contains(key)) {
+                    lineIndexTarget = i;
                     break;
                 }
             }
-            if (contentsLengthIndex != -1) {
-                String[] temp = head.get(contentsLengthIndex).split(":");
-                cookie = temp[1].trim();
+            if (lineIndexTarget != -1) {
+                String[] temp = head.get(lineIndexTarget).split(":");
+                values = temp[1].trim();
             }
         }catch (Exception e) {
-            cookie = null;
+            values = null;
         }
-        return cookie;
+        return values;
+    }
+
+    public static Map<String, String> getCookie(ArrayList<String> head) {
+        String cookies = getValuesParsingInHead(head, "Cookie");
+        return getParseValues(cookies, ";");
     }
 
     public static String getParameterLine(String uri) {
@@ -86,16 +82,21 @@ public class HttpRequestUtils {
         return returnPath;
     }
 
-    public static Map<String, String> getParseValues(String prameterLine) {
+        public static Map<String, String> getParseParameter(String parameters) {
+        return getParseValues(parameters, "&");
+    }
+
+    private static Map<String, String> getParseValues(String targets, String token) {
         Map<String, String> keysMap = new HashMap<>();
-        String[] token =  prameterLine.split("&");
-        for(int i = 0 ; i < token.length ;i ++) {
-            String[] keysToekn = token[i].split("=") ;
-            if(keysToekn.length == 1) {
-                keysMap.put(keysToekn[0].trim(), "");
-            }
-            else {
-                keysMap.put(keysToekn[0].trim(), keysToekn[1].trim());
+        if(Strings.isNullOrEmpty(targets) == false) {
+            String[] splitedString = targets.split(token);
+            for (int i = 0; i < splitedString.length; i++) {
+                String[] keysToekn = splitedString[i].split("=");
+                if (keysToekn.length == 1) {
+                    keysMap.put(keysToekn[0].trim(), "");
+                } else {
+                    keysMap.put(keysToekn[0].trim(), keysToekn[1].trim());
+                }
             }
         }
         return keysMap;

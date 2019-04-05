@@ -25,8 +25,14 @@ public class HttpRequestUtilsTest {
     }
 
     @Test
+    public void getParameterLineTest() {
+        String parameters = HttpRequestUtils.getParameterLine("/user/create?userId=a&password=&name=a&email=a%40gmail.com");
+        Assert.assertEquals("userId=a&password=&name=a&email=a%40gmail.com", parameters);
+    }
+
+    @Test
     public void getQueryStringTest() {
-        Map<String, String> values = HttpRequestUtils.getParseValues("/user/create?userId=a&password=&name=a&email=a%40gmail.com ");
+        Map<String, String> values = HttpRequestUtils.getParseParameter(HttpRequestUtils.getParameterLine("/user/create?userId=a&password=&name=a&email=a%40gmail.com "));
         Assert.assertEquals("a",values.get("userId"));
         Assert.assertEquals("",values.get("password"));
         Assert.assertEquals("a",values.get("name"));

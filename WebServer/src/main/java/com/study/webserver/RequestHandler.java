@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 public class RequestHandler extends Thread{
     private static final Logger log = LoggerFactory.getLogger(RequestHandler.class);
     public static final String GET = "GET";
-    public static final String POSET = "POST";
+    public static final String POST = "POST";
 
     private Socket connection;
 
@@ -43,15 +43,17 @@ public class RequestHandler extends Thread{
             Map<String, String> param;
 
             if(type.equals(GET)) {
-                param = HttpRequestUtils.getParseValues(HttpRequestUtils.getParameterLine(uri));
+                param = HttpRequestUtils.getParseParameter(HttpRequestUtils.getParameterLine(uri));
             }
             else {
                 String bodyInRequest = readBody(bufferedReaded, HttpRequestUtils.getContentsLength(head));
-                param = HttpRequestUtils.getParseValues(bodyInRequest);
+                param = HttpRequestUtils.getParseParameter(bodyInRequest);
             }
+            Map<String, String> cookies = HttpRequestUtils.getCookie(head);
+
             DataOutputStream dos = new DataOutputStream(out);
             RequestUriHandler requestUriHandler = new RequestUriHandler();
-            Response response = requestUriHandler.requestHandle(uri, param);
+            Response response = requestUriHandler.requestHandle(uri, param, cookies);
             send(dos, response);
 
         } catch (IOException e) {

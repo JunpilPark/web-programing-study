@@ -73,7 +73,7 @@ public class Response {
         this.charset = charset;
 
         int bodyLength = 0;
-        if( Strings.isNullOrEmpty(body) == false ) bodyLength = body.length();
+        if( Strings.isNullOrEmpty(body) == false ) bodyLength = body.getBytes("utf-8").length;
         this.body = body;
         this.head = createHead(bodyLength);
     }
