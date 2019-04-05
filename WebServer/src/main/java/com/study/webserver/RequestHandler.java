@@ -44,16 +44,18 @@ public class RequestHandler extends Thread{
 
             if(type.equals(GET)) {
                 param = HttpRequestUtils.getParseParameter(HttpRequestUtils.getParameterLine(uri));
+                uri = HttpRequestUtils.getRequestPath(uri);
             }
             else {
                 String bodyInRequest = readBody(bufferedReaded, HttpRequestUtils.getContentsLength(head));
                 param = HttpRequestUtils.getParseParameter(bodyInRequest);
             }
             Map<String, String> cookies = HttpRequestUtils.getCookie(head);
+            String acceptContetnsType = HttpRequestUtils.getAcceptContentType(head);
 
             DataOutputStream dos = new DataOutputStream(out);
             RequestUriHandler requestUriHandler = new RequestUriHandler();
-            Response response = requestUriHandler.requestHandle(uri, param, cookies);
+            Response response = requestUriHandler.requestHandle(uri, param, cookies, acceptContetnsType);
             send(dos, response);
 
         } catch (IOException e) {

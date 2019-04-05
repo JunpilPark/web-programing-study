@@ -89,14 +89,16 @@ public class RequestUriHandler {
         return response;
     }
 
-    public Response requestHandle(String uri, Map<String, String> param, Map<String, String> cookie) throws IOException {
+    public Response requestHandle(String uri, Map<String, String> param, Map<String, String> cookie, String acceptContentsType) throws IOException {
         String actionOrUrl = HttpRequestUtils.getRequestPath(uri);
         String body = "";
         Response response = null;
+        String defualtAcceptContentsType = "text/html";
+        if( Strings.isNullOrEmpty(acceptContentsType) == false) defualtAcceptContentsType = acceptContentsType;
         if(HttpRequestUtils.isFileType(actionOrUrl)) {
             body = getFileFromUri(actionOrUrl);
             response = new Response();
-            response.createResponse(body, "text/html", "utf-8");
+            response.createResponse(body, defualtAcceptContentsType, "utf-8");
         }
         else {
             if(uri.equals("/user/create")) {

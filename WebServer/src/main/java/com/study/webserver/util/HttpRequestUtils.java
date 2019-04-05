@@ -17,6 +17,14 @@ public class HttpRequestUtils {
         return sprit[0];
     }
 
+    public static String getAcceptContentType(ArrayList<String> head) {
+        String strRetuen = null;
+        String strLineInHaed = getValuesParsingInHead(head, "Accept");
+        if( Strings.isNullOrEmpty(strLineInHaed) ) return strLineInHaed;
+        String[] spritString =  strLineInHaed.split(",");
+        return spritString[0];
+    }
+
     public static String getUri(String requestHeadLine) {
 
         if(Strings.isNullOrEmpty(requestHeadLine.trim())) {
